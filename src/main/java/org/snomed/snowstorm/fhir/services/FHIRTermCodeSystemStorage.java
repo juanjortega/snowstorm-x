@@ -65,7 +65,7 @@ public class FHIRTermCodeSystemStorage implements ITermCodeSystemStorageSvc {
 		if (codeSystem.getUrl().startsWith(FHIRConstants.ICD10_URI)) {
 			codeSystem.setHierarchyMeaning(CodeSystem.CodeSystemHierarchyMeaning.ISA);
 		}
-		codeSystemVersion = fhirCodeSystemService.save(codeSystem);
+		codeSystemVersion = fhirCodeSystemService.createUpdate(codeSystem);
 		fhirConceptService.saveAllConceptsOfCodeSystemVersion(termCodeSystemVersion, codeSystemVersion);
 
 		valueSets = orEmpty(valueSets);
