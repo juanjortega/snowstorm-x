@@ -1,70 +1,84 @@
 version: '2.1'
 
 services:
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
-    container_name: elasticsearch
+  elasticsearch1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.1
+    container_name: elasticsearch1
     environment:
       - node.name=snowstorm-1
       - cluster.name=snowstorm-cluster
       - cluster.initial_master_nodes=snowstorm-1,snowstorm-2,snowstorm-3
       - "ES_JAVA_OPTS=-Xms4g -Xmx4g"
-      - discovery.type=single-node
+      - discovery.seed_hosts=elasticsearch1,elasticsearch2,elasticsearch3
+      - discovery.type=zen
     volumes:
       - elastic:/usr/share/elasticsearch/data
     networks:
-      elastic:
-        aliases:
-         - es
+      - elastic
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://es:9200"]
+      test: ["CMD", "curl", "-f", "http://elasticsearch1:9200"]
       interval: 1s
       timeout: 1s
       retries: 60
-    ports:
-      - 127.0.0.1:9200:9200
     mem_reservation: 4g
     deploy:
-      replicas: 3
+      replicas: 1
       update_config:
         parallelism: 1
         delay: 10s
       restart_policy:
         condition: on-failure
 
-  snowstorm:
-    image: snomedinternational/snowstorm:latest
-    container_name: snowstorm
-    restart: always
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-    entrypoint: java -Xms2g -Xmx4g -jar snowstorm.jar --elasticsearch.urls=http://es:9200
-    networks:
-      elastic:
-        aliases:
-         - snowstorm
-    ports:
-      - 8080:8080
-
-  browser:
-    image: snomedinternational/snomedct-browser:latest
-    container_name: browser
-    depends_on:
-      - snowstorm
-    links:
-      - snowstorm:snowstorm
+  elasticsearch2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.1
+    container_name: elasticsearch2
+    environment:
+      - node.name=snowstorm-2
+      - cluster.name=snowstorm-cluster
+      - cluster.initial_master_nodes=snowstorm-1,snowstorm-2,snowstorm-3
+      - "ES_JAVA_OPTS=-Xms4g -Xmx4g"
+      - discovery.seed_hosts=elasticsearch1,elasticsearch2,elasticsearch3
+      - discovery.type=zen
+    volumes:
+      - elastic:/usr/share/elasticsearch/data
     networks:
       - elastic
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://elasticsearch2:9200"]
+      interval: 1s
+      timeout: 1s
+      retries: 60
+    mem_reservation: 4g
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+
+  elasticsearch3:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.1
+    container_name: elasticsearch3
     environment:
-      - API_HOST=http://snowstorm:8080/
-    ports:
-      - 80:80
-    restart: always
-
-networks:
-  elastic:
-
-volumes:
-  elastic:
+      - node.name=snowstorm-3
+      - cluster.name=snowstorm-cluster
+      - cluster.initial_master_nodes=snowstorm-1,snowstorm-2,snowstorm-3
+      - "ES_JAVA_OPTS=-Xms4g -Xmx4g"
+      - discovery.seed_hosts=elasticsearch1,elasticsearch2,elasticsearch3
+      - discovery.type=zen
+    volumes:
+      - elastic:/usr/share/elasticsearch/data
+    networks:
+      - elastic
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://elasticsearch3:9200"]
+      interval: 1s
+      timeout: 1s
+      retries: 60
+    mem_reservation: 4g
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        delay
